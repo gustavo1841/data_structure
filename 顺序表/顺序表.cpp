@@ -1,17 +1,18 @@
 ﻿
 #include <iostream>
-#define InitSize 2
 using namespace std;
+#define InitSize 2
+#define MaxSize 2
 //定义顺序表的结构
 typedef struct {
-    int *data;
-    int MaxSize,length;
+    int * data;
+    int capacity,length;
 }SqList;
 //初始化表
 void InitList(SqList &L) {
-    L.data = new int[InitSize];
+    L.data = (int*)malloc(sizeof(int) * InitSize);
     L.length = 0;
-    L.MaxSize = InitSize;
+    L.capacity = MaxSize;
     for (int i = 0;i < InitSize;i++) {
         L.data[i] = NULL;
     }
@@ -20,12 +21,12 @@ void InitList(SqList &L) {
 //动态扩容
 bool InCreateSize(SqList &L) {
     int* p = L.data;
-    int * list = new int[L.length*2];
+    int* list = (int*)malloc(sizeof(int) * L.capacity * 2);
     for (int i = 0;i < L.length;i++) {
         list[i] = p[i];
     }
-    cout << "动态扩容成功！" <<"扩容前容量："<<L.MaxSize<<"，扩容后："<<L.MaxSize*2<< endl;
-    L.MaxSize = L.MaxSize * 2;
+    cout << "动态扩容成功！" <<"扩容前容量："<<L.capacity<<"，扩容后："<<L.capacity *2<< endl;
+    L.capacity = L.capacity * 2;
     L.data = list;
     free(p);
     return true;
@@ -38,7 +39,7 @@ bool ListInsert(SqList &L,int i,int data) {
         return false;
     }
     //判断数组长度是否超出最大值
-    if (L.length>=L.MaxSize) {
+    if (L.length>=L.capacity) {
         bool isCreate = InCreateSize(L);
         if (!isCreate)
             return false;
