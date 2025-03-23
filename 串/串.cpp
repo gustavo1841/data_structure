@@ -1,64 +1,152 @@
-﻿
-#include <iostream>
-using namespace std;
-#define MAXLEN 255
-//长顺序存储
-typedef struct {
-    char ch[MAXLEN];
-    int length;
-}StringPlus;
-//堆分配存储
-typedef struct {
-    char* ch;
-    int length;
+﻿#include <iostream>
 
-}HeapString;
-/**
-从主串S的第一字符起，与字符串T的第一个字符比较,若相等，则继续逐个比较后续的字符；
-否则从主串的下一个字符起，重新和T的字符比较；以此类推，直至字符串T中的每个字符依次和主串S中的一个连续的字符序列相等，则称匹配成功，
-函数数值为与T中的第一个字符相等的字符在主串S中的序号。否则称匹配不成功，函数值为0
-**/
+class String {
+private:
+    char* data;
+    size_t length;
 
-int index(StringPlus s,StringPlus t) {
-    int i = 1, j = 1;
-    while (i<=s.length && j<=t.length) {
-        if (s.ch[i]==t.ch[j]) {
-            ++i;++j;
+    // 私有构造函数：直接使用现有字符数组，避免重复分配
+    String(char* buffer, size_t len, bool) : data(buffer), length(len) {}
+
+public:
+    // 默认构造函数
+    String() : data(new char[1] {'\0'}), length(0) {}
+
+    // 构造函数
+    String(const char* str) {
+        length = 0;
+        while (str[length] != '\0') length++;
+        data = new char[length + 1];
+        for (size_t i = 0; i < length; i++) {
+            data[i] = str[i];
         }
-        else {
-            //指针后退重新开始匹配
-            i = i - j + 2;
-            j = 1;
-        }
-        if (j>t.length) {
-            return i - t.length;
-        }
-        else {
-            return 0;
-        }
+        data[length] = '\0';
     }
-}
 
-int kmpIndex(StringPlus s,StringPlus t,int next[]) {
-    int i = 1, j = 1;
-    while (i <= s.length && j<=t.length) {
-        if (j==0 || s.ch[i]==t.ch[j]) {
-            ++i;++j;//继续比较后面的字符
+    // 拷贝构造函数
+    String(const String& other) {
+        length = other.length;
+        data = new char[length + 1];
+        for (size_t i = 0; i < length; i++) {
+            data[i] = other.data[i];
         }
-        else {
-            j = next[j];//模式串向右移动
-        }
-        if (j>t.length) {
-            return i - t.length; //匹配成功
-        }
-        else {
-            return 0;
-        }
+        data[length] = '\0';
     }
+
+    // 移动构造函数
+    String(String&& other) noexcept : data(other.data), length(other.length) {
+        other.data = nullptr;
+        other.length = 0;
+    }
+
+    // 析构函数
+    ~String() {
+        delete[] data;
+    }
+
+    // 赋值运算符重载（拷贝）
+    String& operator=(const String& other) {
+        if (this != &other) {
+            if (length != other.length) { // 只有在长度不同的时候才重新分配
+                delete[] data;
+                data = new char[other.length + 1];
+            }
+            length = other.length;
+            for (size_t i = 0; i < length; i++) {
+                data[i] = other.data[i];
+            }
+            data[length] = '\0';
+        }
+        return *this;
+    }
+
+    // 赋值运算符重载（移动）
+    String& operator=(String&& other) noexcept {
+        if (this != &other) {
+            delete[] data;
+            data = other.data;
+            length = other.length;
+            other.data = nullptr;
+            other.length = 0;
+        }
+        return *this;
+    }
+
+    // 获取长度
+    size_t size() const {
+        return length;
+    }
+
+    // 串连接 (O(n + m))
+    String operator+(const String& other) const {
+        char* newData = new char[length + other.length + 1];
+        for (size_t i = 0; i < length; i++) {
+            newData[i] = data[i];
+        }
+        for (size_t i = 0; i < other.length; i++) {
+            newData[length + i] = other.data[i];
+        }
+        newData[length + other.length] = '\0';
+        return String(newData, length + other.length, true);
+    }
+
+    // 子串提取 (O(len))
+    String substring(size_t start, size_t len) const {
+        if (start >= length) return String("");
+        len = (start + len > length) ? (length - start) : len;
+        char* subData = new char[len + 1];
+        for (size_t i = 0; i < len; i++) {
+            subData[i] = data[start + i];
+        }
+        subData[len] = '\0';
+        return String(subData, len, true);
+    }
+
+    // 查找是否包含某个子串 (O(n * m))
+    bool contains(const String& subStr) const {
+        if (subStr.length > length) return false;
+
+        // 遍历当前字符串
+        for (size_t i = 0; i <= length - subStr.length; i++) {
+            size_t j = 0;
+            // 比较子串
+            while (j < subStr.length && data[i + j] == subStr.data[j]) {
+                j++;
+            }
+            // 如果完全匹配，返回 true
+            if (j == subStr.length) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 输出流重载
+    void print() const {
+        for (size_t i = 0; i < length; i++) {
+            std::cout << data[i];
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    String s1("Hello");
+    String s2("World");
+    String s3 = s1 + s2;
+    s3.print(); // HelloWorld
+
+    String s4 = s3.substring(5, 5);
+    s4.print(); // World
+
+    // 检查是否包含子串
+    String sub("World");
+    if (s3.contains(sub)) {
+        std::cout << "Found substring!" << std::endl; // Found substring!
+    }
+    else {
+        std::cout << "Substring not found." << std::endl;
+    }
+
+    return 0;
 }
-
-int main()
-{
-}
-
-

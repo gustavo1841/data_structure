@@ -1,0 +1,4 @@
+﻿  分块查找.cpp
+D:\workspace\data_structure\分块查找\分块查找.cpp(21,15): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\workspace\data_structure\分块查找\分块查找.cpp(34,24): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+  分块查找.vcxproj -> D:\workspace\data_structure\x64\Debug\分块查找.exe
